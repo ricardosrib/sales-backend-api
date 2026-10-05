@@ -26,6 +26,65 @@ The project follows a clean separation between layers:
 - `domain.model` contains in-memory domain model classes used by the service layer
 - `config.DataInitializer` seeds initial data into the H2 database at startup
 
+```mermaid
+flowchart TD
+    Client[API client] --> Controller[SalesController]
+    Controller --> UCs[Use cases]
+
+    subgraph UseCases
+        UCs --> ProductUC[Product and product listing use cases]
+        UCs --> BudgetUC[Budget creation, confirmation, and management use cases]
+        UCs --> StockUC[Stock listing and update use cases]
+        UCs --> CustomerUC[Customer lookup use case]
+        UCs --> HistoryUC[Budget history use case]
+    end
+
+    ProductUC --> SalesService[SalesService]
+    BudgetUC --> SalesService
+    HistoryUC --> SalesService
+    StockUC --> StockService[StockService]
+    ProductUC --> StockService
+    CustomerUC --> CustomerRepoPort[ICustomerRepository]
+
+    SalesService --> BudgetRepoPort[IBudgetRepository]
+    SalesService --> StockRepoPort[IStockRepository]
+    SalesService --> ProductRepoPort[IProductRepository]
+    SalesService --> CustomerRepoPort
+    SalesService --> StockService
+    SalesService --> HistoryJPA[BudgetHistoryJPA]
+
+    StockService --> StockRepoPort
+    StockService --> ProductRepoPort
+
+    subgraph RepositoryAdapters
+        BudgetAdapter[BudgetJPARepository] -. implements .-> BudgetRepoPort
+        StockAdapter[StockJPARepository] -. implements .-> StockRepoPort
+        ProductAdapter[ProductJPARepository] -. implements .-> ProductRepoPort
+        CustomerAdapter[CustomerJPARepository] -. implements .-> CustomerRepoPort
+    end
+
+    BudgetAdapter --> BudgetJPA[BudgetJPA]
+    StockAdapter --> StockJPA[StockJPA]
+    ProductAdapter --> ProductJPA[ProductJPA]
+    CustomerAdapter --> CustomerJPA[CustomerJPA]
+
+    BudgetJPA --> Entities[JPA entities]
+    StockJPA --> Entities
+    ProductJPA --> Entities
+    CustomerJPA --> Entities
+    HistoryJPA --> Entities
+    Entities --> DB[(H2 database)]
+
+    Initializer[DataInitializer] --> ProductJPA
+    Initializer --> StockJPA
+    Initializer --> CustomerJPA
+
+    Controller -. errors .-> Advice[GlobalExceptionHandler]
+    Advice --> ErrorDTO[ErrorResponse]
+```
+
+The use cases connect HTTP requests to the services. Repository interfaces separate service logic from most JPA persistence; budget history currently uses `BudgetHistoryJPA` directly from `SalesService`.
+
 ## Key Packages
 
 - `com.example.sales_system.controller`
