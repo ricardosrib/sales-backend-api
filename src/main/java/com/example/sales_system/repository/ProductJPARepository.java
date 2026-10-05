@@ -36,4 +36,10 @@ public class ProductJPARepository implements IProductRepository {
         ProductEntity product = productRepository.findById(id).orElse(null);
         return (product == null) ? null : ProductEntity.toProductModel(product);
     }
+
+    @Override
+    public ProductModel save(ProductModel product) {
+        ProductEntity entity = ProductEntity.fromProductModel(product);
+        return ProductEntity.toProductModel(productRepository.save(entity));
+    }
 }

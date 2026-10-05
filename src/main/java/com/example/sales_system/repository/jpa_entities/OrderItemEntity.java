@@ -17,6 +17,8 @@ public class OrderItemEntity {
     private BudgetEntity budget;
 
     private int quantity;
+    private String productDescription;
+    private double unitPrice;
 
     protected OrderItemEntity() {
     }
@@ -24,6 +26,8 @@ public class OrderItemEntity {
     public OrderItemEntity(ProductEntity product, int quantity) {
         this.product = product;
         this.quantity = quantity;
+        this.productDescription = product.getDescription();
+        this.unitPrice = product.getUnitPrice();
     }
 
     public long getId() {
@@ -38,6 +42,10 @@ public class OrderItemEntity {
         return quantity;
     }
 
+    public String getProductDescription() { return productDescription; }
+
+    public double getUnitPrice() { return unitPrice; }
+
     @Override
     public String toString() {
         return "OrderItem [product=" + product + ", quantity=" + quantity + "]";
@@ -45,11 +53,14 @@ public class OrderItemEntity {
 
     public static OrderItemEntity fromOrderItemModel(OrderItemModel model) {
         ProductEntity product = ProductEntity.fromProductModel(model.getProduct());
-        return new OrderItemEntity(product, model.getQuantity());
+        OrderItemEntity entity = new OrderItemEntity(product, model.getQuantity());
+        entity.productDescription = model.getProduct().getDescription();
+        entity.unitPrice = model.getProduct().getUnitPrice();
+        return entity;
     }
 
     public static OrderItemModel toOrderItemModel(OrderItemEntity item) {
-        ProductModel productModel = ProductEntity.toProductModel(item.getProduct());
+        ProductModel productModel = new ProductModel(item.getProduct().getId(), item.getProductDescription(), item.getUnitPrice());
         return new OrderItemModel(productModel, item.getQuantity());
     }
 }

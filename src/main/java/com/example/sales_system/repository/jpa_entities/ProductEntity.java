@@ -3,10 +3,13 @@ package com.example.sales_system.repository.jpa_entities;
 import com.example.sales_system.domain.model.ProductModel;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 
 @Entity
 public class ProductEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     private String description;
@@ -35,6 +38,8 @@ public class ProductEntity {
     public void setUnitPrice(double unitPrice) {
         this.unitPrice = unitPrice;
     }
+
+    public void setDescription(String description) { this.description = description; }
 
     @Override
     public String toString() {

@@ -69,6 +69,11 @@ On startup, the application seeds the database with initial entities if none exi
 
 ### Products
 
+- `POST /api/products`
+  - Creates a catalog product using `{"description":"Keyboard","unitPrice":75.0}`. New products do not get stock automatically.
+- `PATCH /api/products/{id}`
+  - Updates either or both of `description` and `unitPrice`.
+
 - `GET /api/products`
   - Returns all products
 
@@ -98,6 +103,10 @@ On startup, the application seeds the database with initial entities if none exi
   - Cancels an active, unconfirmed budget. Cancelled budgets cannot be confirmed.
 - `POST /api/budgets/{id}/duplicate`
   - Creates a new budget for the same customer and items, using current product prices.
+- `GET /api/budgets/{id}/history`
+  - Shows timestamped status and item price snapshots for budget creation, item changes, confirmation, and cancellation.
+- `POST /api/budgets/{id}/items`
+  - Adds a product to an active budget or replaces its quantity if already present. Body: `{"productId":1,"quantity":2}`. The total is recalculated using current price for the changed item and stored prices for the others.
 
 - `POST /api/budgets`
   - Creates a new budget (quote)

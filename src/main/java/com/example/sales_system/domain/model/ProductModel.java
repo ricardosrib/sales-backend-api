@@ -19,6 +19,8 @@ public class ProductModel {
         return this.description;
     }
 
+    public void setDescription(String description) { this.description = description; }
+
     public double getUnitPrice() {
         return this.unitPrice;
     }

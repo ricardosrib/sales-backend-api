@@ -29,6 +29,9 @@ public class BudgetManagementUC {
     public void delete(long id) { salesService.deleteBudget(id); }
     public BudgetDTO cancel(long id) { return BudgetDTO.fromModel(salesService.cancelBudget(id)); }
     public BudgetDTO duplicate(long id) { return BudgetDTO.fromModel(salesService.duplicateBudget(id)); }
+    public BudgetDTO addOrUpdateItem(long id, long productId, int quantity) {
+        return BudgetDTO.fromModel(salesService.addOrUpdateBudgetItem(id, productId, quantity));
+    }
 
     private BudgetPageDTO page(List<BudgetModel> matches, int page, int size) {
         long offset = (long) page * size;

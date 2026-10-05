@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 
@@ -24,6 +27,8 @@ import com.example.sales_system.usecase.GetStockQuantityUC;
 import com.example.sales_system.usecase.ListAllProductsUC;
 import com.example.sales_system.usecase.BudgetManagementUC;
 import com.example.sales_system.usecase.ListStockUC;
+import com.example.sales_system.usecase.ProductManagementUC;
+import com.example.sales_system.usecase.BudgetHistoryUC;
 import com.example.sales_system.usecase.UpdateStockUC;
 import com.example.sales_system.usecase.dto.BudgetDTO;
 import com.example.sales_system.usecase.dto.CreateBudgetRequest;
@@ -32,6 +37,9 @@ import com.example.sales_system.usecase.dto.OrderDTO;
 import com.example.sales_system.usecase.dto.ProductDTO;
 import com.example.sales_system.usecase.dto.StockItemDTO;
 import com.example.sales_system.usecase.dto.BudgetPageDTO;
+import com.example.sales_system.usecase.dto.BudgetHistoryDTO;
+import com.example.sales_system.usecase.dto.CreateProductRequest;
+import com.example.sales_system.usecase.dto.UpdateProductRequest;
 
 @RestController
 @RequestMapping("/api")
@@ -48,6 +56,8 @@ public class SalesController {
     private final UpdateStockUC updateStockUC;
     private final BudgetManagementUC budgetManagementUC;
     private final ListStockUC listStockUC;
+    private final ProductManagementUC productManagementUC;
+    private final BudgetHistoryUC budgetHistoryUC;
 
     public SalesController(
             ListAllProductsUC listAllProductsUC,
@@ -60,7 +70,9 @@ public class SalesController {
             ConfirmBudgetUC confirmBudgetUC,
             UpdateStockUC updateStockUC,
             BudgetManagementUC budgetManagementUC,
-            ListStockUC listStockUC) {
+            ListStockUC listStockUC,
+            ProductManagementUC productManagementUC,
+            BudgetHistoryUC budgetHistoryUC) {
         this.listAllProductsUC = listAllProductsUC;
         this.availableProductsUC = availableProductsUC;
         this.getProductByIdUC = getProductByIdUC;
@@ -72,6 +84,8 @@ public class SalesController {
         this.updateStockUC = updateStockUC;
         this.budgetManagementUC = budgetManagementUC;
         this.listStockUC = listStockUC;
+        this.productManagementUC = productManagementUC;
+        this.budgetHistoryUC = budgetHistoryUC;
     }
 
     @GetMapping("/products")
@@ -121,6 +135,17 @@ public class SalesController {
         return getBudgetByIdUC.run(id);
     }
 
+    @GetMapping("/budgets/{id}/history")
+    public List<BudgetHistoryDTO> getBudgetHistory(@PathVariable long id) {
+        return budgetHistoryUC.run(id);
+    }
+
+    @PostMapping("/budgets/{id}/items")
+    public BudgetDTO addOrUpdateBudgetItem(@PathVariable long id, @RequestBody OrderDTO item) {
+        if (item == null) throw new com.example.sales_system.exception.BadRequestException("Request body cannot be null");
+        return budgetManagementUC.addOrUpdateItem(id, item.getProductId(), item.getQuantity());
+    }
+
     @DeleteMapping("/budgets/{id}")
     public void deleteBudget(@PathVariable long id) { budgetManagementUC.delete(id); }
 
@@ -129,6 +154,19 @@ public class SalesController {
 
     @PostMapping("/budgets/{id}/duplicate")
     public BudgetDTO duplicateBudget(@PathVariable long id) { return budgetManagementUC.duplicate(id); }
+
+    @PostMapping("/products")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ProductDTO createProduct(@RequestBody CreateProductRequest request) {
+        if (request == null) throw new com.example.sales_system.exception.BadRequestException("Request body cannot be null");
+        return productManagementUC.create(request.getDescription(), request.getUnitPrice());
+    }
+
+    @PatchMapping("/products/{id}")
+    public ProductDTO updateProduct(@PathVariable long id, @RequestBody UpdateProductRequest request) {
+        if (request == null) throw new com.example.sales_system.exception.BadRequestException("Request body cannot be null");
+        return productManagementUC.update(id, request.getDescription(), request.getUnitPrice());
+    }
 
     @PostMapping("/budgets")
     public BudgetDTO createBudget(@RequestBody CreateBudgetRequest request) {

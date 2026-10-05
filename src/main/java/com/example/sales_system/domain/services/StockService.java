@@ -21,7 +21,7 @@ public class StockService {
     }
 
     public List<ProductModel> allProducts() {
-        return stock.findAll();
+        return products.findAll();
     }
 
     public List<ProductModel> availableProducts() {

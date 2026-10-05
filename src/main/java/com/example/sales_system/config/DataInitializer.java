@@ -26,14 +26,12 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         // Seed products if none exist
         if (productJPA.count() == 0) {
-            var p1 = new ProductEntity(1L, "Laptop", 1200.0);
-            var p2 = new ProductEntity(2L, "Mouse", 25.0);
-            productJPA.save(p1);
-            productJPA.save(p2);
+            var p1 = productJPA.save(new ProductEntity(0L, "Laptop", 1200.0));
+            var p2 = productJPA.save(new ProductEntity(0L, "Mouse", 25.0));
 
             // Seed stock items
-            var s1 = new StockItemEntity(1L, p1, 10, 1, 100);
-            var s2 = new StockItemEntity(2L, p2, 50, 5, 200);
+            var s1 = new StockItemEntity(p1.getId(), p1, 10, 1, 100);
+            var s2 = new StockItemEntity(p2.getId(), p2, 50, 5, 200);
             stockJPA.save(s1);
             stockJPA.save(s2);
         }

@@ -3,7 +3,12 @@ package com.example.sales_system.domain.services;
 import com.example.sales_system.domain.model.*;
 import com.example.sales_system.repository.repository_interface.IBudgetRepository;
 import com.example.sales_system.repository.repository_interface.ICustomerRepository;
+import com.example.sales_system.repository.repository_interface.IProductRepository;
 import com.example.sales_system.repository.repository_interface.IStockRepository;
+import com.example.sales_system.repository.jpa_interface.BudgetHistoryJPA;
+import com.example.sales_system.repository.jpa_entities.BudgetHistoryEntity;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +17,7 @@ import com.example.sales_system.exception.BadRequestException;
 import com.example.sales_system.exception.NotFoundException;
 import java.util.List;
 import java.util.Comparator;
+import java.time.Instant;
 
 @Service
 public class SalesService {
@@ -19,15 +25,24 @@ public class SalesService {
     private IStockRepository stock;
     private ICustomerRepository customers;
     private StockService stockService;
+    private IProductRepository products;
+    private BudgetHistoryJPA history;
+    private ObjectMapper objectMapper;
 
     public SalesService(IBudgetRepository budgets,
                         IStockRepository stock,
                         StockService stockService,
-                        ICustomerRepository customers) {
+                        ICustomerRepository customers,
+                        IProductRepository products,
+                        BudgetHistoryJPA history,
+                        ObjectMapper objectMapper) {
         this.budgets = budgets;
         this.stock = stock;
         this.stockService = stockService;
         this.customers = customers;
+        this.products = products;
+        this.history = history;
+        this.objectMapper = objectMapper;
     }
 
     public List<ProductModel> availableProducts() {
@@ -38,6 +53,7 @@ public class SalesService {
         return this.budgets.findById(id);
     }
 
+    @Transactional
     public BudgetModel createBudget(long customerId, OrderModel order) {
         var newBudget = new BudgetModel();
         newBudget.addOrderItems(order);
@@ -58,7 +74,9 @@ public class SalesService {
                 .sum();
         newBudget.setItemCost(itemCost);
 
-        return this.budgets.register(newBudget);
+        BudgetModel saved = this.budgets.register(newBudget);
+        recordHistory(saved, "CREATED");
+        return saved;
     }
 
     @Transactional
@@ -97,6 +115,7 @@ public class SalesService {
         budget.setConfirmationDate(LocalDate.now());
         budget.finalizeBudget();
         budgets.save(budget);
+        recordHistory(budget, "CONFIRMED");
 
         return budget;
     }
@@ -119,14 +138,17 @@ public class SalesService {
         return listBudgets(customerId, null, null, null);
     }
 
+    @Transactional
     public void deleteBudget(long id) {
         BudgetModel budget = requireBudget(id);
         if (budget.isFinalized() || budget.isCancelled()) {
             throw new BadRequestException("Only active, unconfirmed budgets can be deleted");
         }
+        history.deleteByBudgetId(id);
         budgets.deleteById(id);
     }
 
+    @Transactional
     public BudgetModel cancelBudget(long id) {
         BudgetModel budget = requireBudget(id);
         if (budget.isFinalized() || budget.isCancelled()) {
@@ -134,7 +156,76 @@ public class SalesService {
         }
         budget.cancel();
         budgets.save(budget);
+        recordHistory(budget, "CANCELLED");
         return budget;
+    }
+
+    @Transactional
+    public BudgetModel addOrUpdateBudgetItem(long id, long productId, int quantity) {
+        BudgetModel budget = requireBudget(id);
+        ensureEditable(budget);
+        if (productId <= 0 || quantity <= 0) throw new BadRequestException("Product ID and quantity must be positive");
+        ProductModel product = products.findById(productId);
+        if (product == null) throw new NotFoundException("Product not found with ID: " + productId);
+        budget.upsertOrderItem(new OrderItemModel(product, quantity));
+        recalculateCost(budget);
+        budgets.save(budget);
+        recordHistory(budget, "ITEM_ADDED_OR_UPDATED");
+        return budget;
+    }
+
+    public List<BudgetHistoryEntity> budgetHistory(long id) {
+        requireBudget(id);
+        return history.findByBudgetIdOrderByOccurredAtAscIdAsc(id);
+    }
+
+    @Transactional
+    public ProductModel createProduct(String description, Double unitPrice) {
+        validateProduct(description, unitPrice);
+        return products.save(new ProductModel(0, description.trim(), unitPrice));
+    }
+
+    @Transactional
+    public ProductModel updateProduct(long id, String description, Double unitPrice) {
+        if (id <= 0) throw new BadRequestException("Product ID must be positive");
+        ProductModel product = products.findById(id);
+        if (product == null) throw new NotFoundException("Product not found with ID: " + id);
+        if (description != null) {
+            if (description.isBlank()) throw new BadRequestException("Description cannot be blank");
+            product.setDescription(description.trim());
+        }
+        if (unitPrice != null) {
+            if (!Double.isFinite(unitPrice) || unitPrice <= 0) throw new BadRequestException("Unit price must be a positive finite number");
+            product.setUnitPrice(unitPrice);
+        }
+        if (description == null && unitPrice == null) throw new BadRequestException("At least one product field must be provided");
+        return products.save(product);
+    }
+
+    private void validateProduct(String description, Double unitPrice) {
+        if (description == null || description.isBlank()) throw new BadRequestException("Description is required");
+        if (unitPrice == null || !Double.isFinite(unitPrice) || unitPrice <= 0) throw new BadRequestException("Unit price must be a positive finite number");
+    }
+
+    private void recalculateCost(BudgetModel budget) {
+        budget.setItemCost(budget.getItems().stream()
+                .mapToDouble(item -> item.getProduct().getUnitPrice() * item.getQuantity()).sum());
+    }
+
+    private void ensureEditable(BudgetModel budget) {
+        if (budget.isFinalized() || budget.isCancelled()) throw new BadRequestException("Only active, unconfirmed budgets can be changed");
+    }
+
+    private void recordHistory(BudgetModel budget, String action) {
+        String status = budget.isCancelled() ? "CANCELLED" : budget.isFinalized() ? "CONFIRMED" : "DRAFT";
+        String snapshot;
+        try {
+            snapshot = objectMapper.writeValueAsString(budget.getItems().stream()
+                    .map(com.example.sales_system.usecase.dto.BudgetHistoryItemDTO::fromModel).toList());
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Could not serialize budget history", ex);
+        }
+        history.save(new BudgetHistoryEntity(budget.getId(), Instant.now(), action, status, budget.getItemCost(), snapshot));
     }
 
     public BudgetModel duplicateBudget(long id) {

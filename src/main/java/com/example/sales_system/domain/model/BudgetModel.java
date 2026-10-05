@@ -37,6 +37,16 @@ public class BudgetModel {
         items.add(orderItem);
     }
 
+    public void upsertOrderItem(OrderItemModel orderItem) {
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).getProduct().getId() == orderItem.getProduct().getId()) {
+                items.set(i, orderItem);
+                return;
+            }
+        }
+        items.add(orderItem);
+    }
+
     public List<OrderItemModel> getItems() {
         return Collections.unmodifiableList(items);
     }
