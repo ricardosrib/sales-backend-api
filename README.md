@@ -88,6 +88,17 @@ On startup, the application seeds the database with initial entities if none exi
 
 ### Budgets
 
+- `GET /api/budgets?page=0&size=20`
+  - Lists budgets newest first. Optional filters: `customerId`, `finalized`, `fromDate`, and `toDate` (`YYYY-MM-DD`). The response includes `content`, `page`, `size`, `totalElements`, and `totalPages`.
+- `GET /api/customers/{id}/budgets?page=0&size=20`
+  - Lists a customer's budgets, newest first.
+- `DELETE /api/budgets/{id}`
+  - Deletes an active, unconfirmed budget.
+- `POST /api/budgets/{id}/cancel`
+  - Cancels an active, unconfirmed budget. Cancelled budgets cannot be confirmed.
+- `POST /api/budgets/{id}/duplicate`
+  - Creates a new budget for the same customer and items, using current product prices.
+
 - `POST /api/budgets`
   - Creates a new budget (quote)
   - Request body example:
@@ -109,6 +120,11 @@ On startup, the application seeds the database with initial entities if none exi
   - Confirms a budget, validates stock availability, deducts stock, and finalizes the budget
 
 ### Stock Management
+
+- `GET /api/stocks`
+  - Lists stock records with quantities and stock thresholds.
+- `GET /api/stocks/low`
+  - Lists stock records at or below their minimum stock level.
 
 - `PUT /api/stocks/{id}?quantity={quantity}`
   - Updates stock quantity for the given product ID

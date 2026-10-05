@@ -44,4 +44,9 @@ public class BudgetJPARepository implements IBudgetRepository {
         var budgetJpa = BudgetEntity.fromBudgetModel(budget);
         budgetRepository.save(budgetJpa);
     }
+
+    @Override
+    public void deleteById(long id) {
+        budgetRepository.deleteById(id);
+    }
 }

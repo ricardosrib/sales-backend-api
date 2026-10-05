@@ -1,5 +1,6 @@
 package com.example.sales_system.controller.advice;
 
+import com.example.sales_system.controller.dto.ErrorResponse;
 import com.example.sales_system.exception.BadRequestException;
 import com.example.sales_system.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;

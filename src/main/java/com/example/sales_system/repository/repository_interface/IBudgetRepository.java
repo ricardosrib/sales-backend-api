@@ -9,4 +9,5 @@ public interface IBudgetRepository {
     BudgetModel register(BudgetModel budget);
     BudgetModel findById(long id);
     void save(BudgetModel budget);
+    void deleteById(long id);
 }

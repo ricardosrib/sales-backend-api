@@ -54,4 +54,11 @@ public class StockJPARepository implements IStockRepository {
         StockItemEntity stockItem = StockItemEntity.fromStockItemModel(item);
         stockRepository.save(stockItem);
     }
+
+    @Override
+    public List<StockItemModel> findAllStockItems() {
+        return stockRepository.findAll().stream()
+                .map(StockItemEntity::toStockItemModel)
+                .toList();
+    }
 }

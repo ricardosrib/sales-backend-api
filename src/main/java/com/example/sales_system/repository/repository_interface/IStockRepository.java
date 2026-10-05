@@ -11,4 +11,5 @@ public interface IStockRepository {
     int getStockQuantity(long id);
     StockItemModel findById(long id);
     void save(StockItemModel item);
+    List<StockItemModel> findAllStockItems();
 }

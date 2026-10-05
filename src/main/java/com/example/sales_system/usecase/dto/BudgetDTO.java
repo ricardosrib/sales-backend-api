@@ -16,6 +16,7 @@ public class BudgetDTO {
     private double discount;
     private double consumerCost;
     private boolean finalized;
+    private boolean cancelled;
     private LocalDate budgetDate;
     private LocalDate confirmationDate;
 
@@ -60,6 +61,8 @@ public class BudgetDTO {
         return finalized;
     }
 
+    public boolean isCancelled() { return cancelled; }
+
     public LocalDate getBudgetDate() {
         return budgetDate;
     }
@@ -81,7 +84,7 @@ public class BudgetDTO {
         for (OrderItemModel item : budget.getItems()) {
             items.add(OrderItemDTO.fromModel(item));
         }
-        return new BudgetDTO(
+        BudgetDTO dto = new BudgetDTO(
             budget.getId(), 
             items, 
             budget.getItemCost(),
@@ -92,5 +95,7 @@ public class BudgetDTO {
             budget.getBudgetDate(),
             budget.getConfirmationDate()
         );
+        dto.cancelled = budget.isCancelled();
+        return dto;
     }
 }

@@ -13,6 +13,7 @@ public class BudgetModel {
     private double discount;
     private double consumerCost;
     private boolean finalized;
+    private boolean cancelled;
     private CustomerModel customer;
     private LocalDate quotationDate;
     private LocalDate confirmationDate;
@@ -87,6 +88,10 @@ public class BudgetModel {
     public boolean isFinalized() {
         return finalized;
     }
+
+    public boolean isCancelled() { return cancelled; }
+
+    public void cancel() { cancelled = true; }
 
     public void finalizeBudget(){
         finalized = true;

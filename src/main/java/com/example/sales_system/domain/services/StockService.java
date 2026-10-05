@@ -28,6 +28,16 @@ public class StockService {
         return stock.findAllWithStock();
     }
 
+    public List<StockItemModel> allStockItems() {
+        return stock.findAllStockItems();
+    }
+
+    public List<StockItemModel> lowStockItems() {
+        return stock.findAllStockItems().stream()
+                .filter(item -> item.getQuantity() <= item.getMinStock())
+                .toList();
+    }
+
     public ProductModel productById(long id) {
         return this.products.findById(id);
     }

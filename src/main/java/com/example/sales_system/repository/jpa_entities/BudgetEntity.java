@@ -19,6 +19,7 @@ public class BudgetEntity {
     private double discount;
     private double consumerCost;
     private boolean finalized;
+    private boolean cancelled;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItemEntity> items;
@@ -74,6 +75,10 @@ public class BudgetEntity {
         return finalized;
     }
 
+    public boolean isCancelled() { return cancelled; }
+
+    public void setCancelled(boolean cancelled) { this.cancelled = cancelled; }
+
     public List<OrderItemEntity> getItems() {
         return items;
     }
@@ -122,6 +127,7 @@ public class BudgetEntity {
                 model.getBudgetDate(),
                 model.getConfirmationDate()
         );
+        budget.setCancelled(model.isCancelled());
 
         for (OrderItemModel item : model.getItems()) {
             budget.addOrderItem(OrderItemEntity.fromOrderItemModel(item));
@@ -139,6 +145,7 @@ public class BudgetEntity {
         model.setConsumerCost(budget.getConsumerCost());
         model.setCustomer(CustomerEntity.toCustomerModel(budget.getCustomer()));
         if (budget.isFinalized()) model.finalizeBudget();
+        if (budget.isCancelled()) model.cancel();
         model.setBudgetDate(budget.getBudgetDate());
         model.setConfirmationDate(budget.getFinalizationDate());
         for (OrderItemEntity item : budget.getItems()) {

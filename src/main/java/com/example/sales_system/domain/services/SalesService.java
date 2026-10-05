@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import com.example.sales_system.exception.BadRequestException;
 import com.example.sales_system.exception.NotFoundException;
 import java.util.List;
+import java.util.Comparator;
 
 @Service
 public class SalesService {
@@ -38,8 +39,6 @@ public class SalesService {
     }
 
     public BudgetModel createBudget(long customerId, OrderModel order) {
-        System.out.println("Creating budget for customer ID: " + customerId + " with order: " + order);
-
         var newBudget = new BudgetModel();
         newBudget.addOrderItems(order);
 
@@ -69,7 +68,7 @@ public class SalesService {
             throw new NotFoundException("Budget not found: " + id);
         }
 
-        if (budget.isFinalized()) {
+        if (budget.isFinalized() || budget.isCancelled()) {
             throw new BadRequestException("Budget already confirmed: " + id);
         }
 
@@ -99,6 +98,59 @@ public class SalesService {
         budget.finalizeBudget();
         budgets.save(budget);
 
+        return budget;
+    }
+
+    public List<BudgetModel> listBudgets(Long customerId, Boolean finalized, LocalDate from, LocalDate to) {
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new BadRequestException("fromDate must be on or before toDate");
+        }
+        return budgets.findAll().stream()
+                .filter(b -> customerId == null || (b.getCustomer() != null && b.getCustomer().getId() == customerId))
+                .filter(b -> finalized == null || b.isFinalized() == finalized)
+                .filter(b -> from == null || !b.getBudgetDate().isBefore(from))
+                .filter(b -> to == null || !b.getBudgetDate().isAfter(to))
+                .sorted(Comparator.comparing(BudgetModel::getId).reversed())
+                .toList();
+    }
+
+    public List<BudgetModel> listCustomerBudgets(long customerId) {
+        if (customers.findById(customerId) == null) throw new NotFoundException("Customer not found: " + customerId);
+        return listBudgets(customerId, null, null, null);
+    }
+
+    public void deleteBudget(long id) {
+        BudgetModel budget = requireBudget(id);
+        if (budget.isFinalized() || budget.isCancelled()) {
+            throw new BadRequestException("Only active, unconfirmed budgets can be deleted");
+        }
+        budgets.deleteById(id);
+    }
+
+    public BudgetModel cancelBudget(long id) {
+        BudgetModel budget = requireBudget(id);
+        if (budget.isFinalized() || budget.isCancelled()) {
+            throw new BadRequestException("Only active, unconfirmed budgets can be cancelled");
+        }
+        budget.cancel();
+        budgets.save(budget);
+        return budget;
+    }
+
+    public BudgetModel duplicateBudget(long id) {
+        BudgetModel source = requireBudget(id);
+        OrderModel order = new OrderModel(0);
+        for (OrderItemModel item : source.getItems()) {
+            ProductModel product = stockService.productById(item.getProduct().getId());
+            if (product == null) throw new NotFoundException("Product not found with ID: " + item.getProduct().getId());
+            order.addItem(new OrderItemModel(product, item.getQuantity()));
+        }
+        return createBudget(source.getCustomer().getId(), order);
+    }
+
+    private BudgetModel requireBudget(long id) {
+        BudgetModel budget = budgets.findById(id);
+        if (budget == null) throw new NotFoundException("Budget not found: " + id);
         return budget;
     }
 }
