@@ -10,19 +10,19 @@ import org.springframework.stereotype.Repository;
 @Repository
 @Primary
 public class CustomerJPARepository implements ICustomerRepository {
-    private CustomerJPA customerRepository;
+  private CustomerJPA customerRepository;
 
-    public CustomerJPARepository(CustomerJPA customerRepository) {
-        this.customerRepository = customerRepository;
-    }
+  public CustomerJPARepository(CustomerJPA customerRepository) {
+    this.customerRepository = customerRepository;
+  }
 
-    @Override
-    public CustomerModel findById(long id) {
-        CustomerEntity customer = customerRepository.findById(id).orElse(null);
-        if (customer == null) {
-            return null;
-        } else {
-            return CustomerEntity.toCustomerModel(customer);
-        }
+  @Override
+  public CustomerModel findById(long id) {
+    CustomerEntity customer = customerRepository.findById(id).orElse(null);
+    if (customer == null) {
+      return null;
+    } else {
+      return CustomerEntity.toCustomerModel(customer);
     }
+  }
 }

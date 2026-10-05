@@ -1,25 +1,21 @@
 package com.example.sales_system.usecase;
 
+import com.example.sales_system.domain.services.StockService;
+import com.example.sales_system.usecase.dto.ProductDTO;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.example.sales_system.domain.services.StockService;
-import com.example.sales_system.usecase.dto.ProductDTO;
-
 @Component
 public class ListAllProductsUC {
-    private StockService stockService;
+  private StockService stockService;
 
-    @Autowired
-    public ListAllProductsUC(StockService stockService) {
-        this.stockService = stockService;
-    }
+  @Autowired
+  public ListAllProductsUC(StockService stockService) {
+    this.stockService = stockService;
+  }
 
-    public List<ProductDTO> run() {
-        return stockService.allProducts().stream()
-            .map(p -> ProductDTO.fromModel(p))
-            .toList();
-    }
+  public List<ProductDTO> run() {
+    return stockService.allProducts().stream().map(p -> ProductDTO.fromModel(p)).toList();
+  }
 }

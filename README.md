@@ -52,6 +52,20 @@ mvn spring-boot:run
 
 The app starts on the default Spring Boot port `8080`.
 
+### Code Formatting
+
+Java formatting is enforced with Spotless and Google Java Format. Format the project with:
+
+```bash
+mvn spotless:apply
+```
+
+Check formatting without changing files with:
+
+```bash
+mvn spotless:check
+```
+
 ## Seeded Data
 
 On startup, the application seeds the database with initial entities if none exist:

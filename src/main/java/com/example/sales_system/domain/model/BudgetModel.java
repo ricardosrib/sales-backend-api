@@ -6,124 +6,128 @@ import java.util.Collections;
 import java.util.List;
 
 public class BudgetModel {
-    private long id;
-    private List<OrderItemModel> items;
-    private double itemCost;
-    private double tax;
-    private double discount;
-    private double consumerCost;
-    private boolean finalized;
-    private boolean cancelled;
-    private CustomerModel customer;
-    private LocalDate quotationDate;
-    private LocalDate confirmationDate;
+  private long id;
+  private List<OrderItemModel> items;
+  private double itemCost;
+  private double tax;
+  private double discount;
+  private double consumerCost;
+  private boolean finalized;
+  private boolean cancelled;
+  private CustomerModel customer;
+  private LocalDate quotationDate;
+  private LocalDate confirmationDate;
 
-    public BudgetModel(long id) {
-        this.id = id;
-        this.items = new ArrayList<>();
-        this.finalized = false;
+  public BudgetModel(long id) {
+    this.id = id;
+    this.items = new ArrayList<>();
+    this.finalized = false;
+  }
+
+  public BudgetModel() {
+    this.items = new ArrayList<>();
+    this.finalized = false;
+  }
+
+  public void addOrderItems(OrderModel order) {
+    items.addAll(order.getItems());
+  }
+
+  public void addOrderItem(OrderItemModel orderItem) {
+    items.add(orderItem);
+  }
+
+  public void upsertOrderItem(OrderItemModel orderItem) {
+    for (int i = 0; i < items.size(); i++) {
+      if (items.get(i).getProduct().getId() == orderItem.getProduct().getId()) {
+        items.set(i, orderItem);
+        return;
+      }
     }
+    items.add(orderItem);
+  }
 
-    public BudgetModel() {
-        this.items = new ArrayList<>();
-        this.finalized = false;
-    }
+  public List<OrderItemModel> getItems() {
+    return Collections.unmodifiableList(items);
+  }
 
-    public void addOrderItems(OrderModel order) {
-        items.addAll(order.getItems());
-    }
+  public long getId() {
+    return id;
+  }
 
-    public void addOrderItem(OrderItemModel orderItem) {
-        items.add(orderItem);
-    }
+  public void setId(long id) {
+    this.id = id;
+  }
 
-    public void upsertOrderItem(OrderItemModel orderItem) {
-        for (int i = 0; i < items.size(); i++) {
-            if (items.get(i).getProduct().getId() == orderItem.getProduct().getId()) {
-                items.set(i, orderItem);
-                return;
-            }
-        }
-        items.add(orderItem);
-    }
+  public double getItemCost() {
+    return itemCost;
+  }
 
-    public List<OrderItemModel> getItems() {
-        return Collections.unmodifiableList(items);
-    }
+  public void setItemCost(double itemCost) {
+    this.itemCost = itemCost;
+  }
 
-    public long getId() {
-        return id;
-    }
+  public double getTax() {
+    return tax;
+  }
 
-    public void setId(long id){
-        this.id = id;
-    }
+  public void setTax(double tax) {
+    this.tax = tax;
+  }
 
-    public double getItemCost() {
-        return itemCost;
-    }
+  public void setCustomer(CustomerModel customer) {
+    this.customer = customer;
+  }
 
-    public void setItemCost(double itemCost){
-        this.itemCost = itemCost;
-    }
+  public double getDiscount() {
+    return discount;
+  }
 
-    public double getTax() {
-        return tax;
-    }
+  public void setDiscount(double discount) {
+    this.discount = discount;
+  }
 
-    public void setTax(double tax){
-        this.tax = tax;
-    }
+  public double getConsumerCost() {
+    return consumerCost;
+  }
 
-    public void setCustomer(CustomerModel customer) {
-        this.customer = customer;
-    }
+  public void setConsumerCost(double consumerCost) {
+    this.consumerCost = consumerCost;
+  }
 
-    public double getDiscount() {
-        return discount;
-    }
+  public boolean isFinalized() {
+    return finalized;
+  }
 
-    public void setDiscount(double discount){
-        this.discount = discount;
-    }
+  public boolean isCancelled() {
+    return cancelled;
+  }
 
-    public double getConsumerCost() {
-        return consumerCost;
-    }
+  public void cancel() {
+    cancelled = true;
+  }
 
-    public void setConsumerCost(double consumerCost){
-        this.consumerCost = consumerCost;
-    }
+  public void finalizeBudget() {
+    finalized = true;
+  }
 
-    public boolean isFinalized() {
-        return finalized;
-    }
+  public CustomerModel getCustomer() {
+    return customer;
+  }
 
-    public boolean isCancelled() { return cancelled; }
+  public LocalDate getBudgetDate() {
+    return quotationDate;
+  }
 
-    public void cancel() { cancelled = true; }
+  public void setBudgetDate(LocalDate quotationDate) {
+    this.quotationDate = quotationDate;
+  }
 
-    public void finalizeBudget(){
-        finalized = true;
-    }
+  public LocalDate getConfirmationDate() {
+    return confirmationDate;
+  }
 
-    public CustomerModel getCustomer() {
-        return customer;
-    }
-
-    public LocalDate getBudgetDate() {
-        return quotationDate;
-    }
-
-    public void setBudgetDate(LocalDate quotationDate) {
-        this.quotationDate = quotationDate;
-    }
-
-    public LocalDate getConfirmationDate() {
-        return confirmationDate;
-    }
-
-    public void setConfirmationDate(LocalDate confirmationDate) {
-        this.confirmationDate = confirmationDate;
-    }
+  public void setConfirmationDate(LocalDate confirmationDate) {
+    this.confirmationDate = confirmationDate;
+  }
 }

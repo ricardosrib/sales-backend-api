@@ -1,9 +1,6 @@
 package com.example.sales_system.repository.jpa_interface;
 
+import com.example.sales_system.repository.jpa_entities.ProductEntity;
 import org.springframework.data.repository.ListCrudRepository;
 
-import com.example.sales_system.repository.jpa_entities.ProductEntity;
-
-public interface ProductJPA extends ListCrudRepository<ProductEntity, Long> {
-
-}
+public interface ProductJPA extends ListCrudRepository<ProductEntity, Long> {}
