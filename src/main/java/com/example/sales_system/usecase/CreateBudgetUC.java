@@ -28,6 +28,9 @@ public class CreateBudgetUC {
     }
 
     public BudgetDTO run(long customerId, List<OrderDTO> items) {
+        if (customerId <= 0) {
+            throw new BadRequestException("Customer ID must be positive");
+        }
         if (items == null || items.isEmpty()) {
             throw new BadRequestException("Items list cannot be null or empty");
         }
@@ -39,6 +42,9 @@ public class CreateBudgetUC {
             }
             if (item.getQuantity() <= 0) {
                 throw new BadRequestException("Item quantity must be positive");
+            }
+            if (item.getProductId() <= 0) {
+                throw new BadRequestException("Product ID must be positive");
             }
             
             ProductModel product = stockService.productById(item.getProductId());

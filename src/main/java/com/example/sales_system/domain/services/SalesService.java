@@ -5,6 +5,7 @@ import com.example.sales_system.repository.repository_interface.IBudgetRepositor
 import com.example.sales_system.repository.repository_interface.ICustomerRepository;
 import com.example.sales_system.repository.repository_interface.IStockRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import com.example.sales_system.exception.BadRequestException;
@@ -61,6 +62,7 @@ public class SalesService {
         return this.budgets.register(newBudget);
     }
 
+    @Transactional
     public BudgetModel confirmBudget(long id) {
         var budget = this.budgets.findById(id);
         if (budget == null) {

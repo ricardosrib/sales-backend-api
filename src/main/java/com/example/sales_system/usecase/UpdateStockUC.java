@@ -22,8 +22,8 @@ public class UpdateStockUC {
         if (productId <= 0) {
             throw new BadRequestException("Product ID must be positive");
         }
-        if (quantity == 0) {
-            throw new BadRequestException("Quantity cannot be zero");
+        if (quantity < 0) {
+            throw new BadRequestException("Quantity cannot be negative");
         }
         
         StockItemModel stockItem = stockService.addStock(productId, quantity);

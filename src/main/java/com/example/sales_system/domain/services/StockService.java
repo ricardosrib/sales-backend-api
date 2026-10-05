@@ -33,7 +33,11 @@ public class StockService {
     }
 
     public int stockQuantity(long id) {
-        return stock.getStockQuantity(id);
+        int quantity = stock.getStockQuantity(id);
+        if (quantity < 0) {
+            throw new NotFoundException("Stock not found for product ID: " + id);
+        }
+        return quantity;
     }
 
     public StockItemModel addStock(long id, int quantity) {
@@ -41,14 +45,11 @@ public class StockService {
         if (item == null) {
             return null;
         }
-        if (item.getQuantity() + quantity > item.getMaxStock()) {
-            item.setQuantity(item.getMaxStock());
-            stock.save(item);
-        } else {
-            int newQuantity = item.getQuantity() + quantity;
-            item.setQuantity(newQuantity);
-            stock.save(item);
+        if (quantity < 0) {
+            throw new BadRequestException("Quantity cannot be negative");
         }
+        item.setQuantity(Math.min(quantity, item.getMaxStock()));
+        stock.save(item);
         return item;
     }
 
